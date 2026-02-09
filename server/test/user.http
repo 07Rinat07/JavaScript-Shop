@@ -1,0 +1,57 @@
+### Регистрация нового пользователя
+POST /api/user/signup HTTP/1.1
+Host: localhost:7000
+Content-type: application/json; charset=utf-8
+
+{
+    "email": "user@example.com",
+    "password": "<password>"
+}
+
+### Аутентификация (вход) пользователя
+POST /api/user/login HTTP/1.1
+Host: localhost:7000
+Content-type: application/json; charset=utf-8
+
+{
+    "email": "user@example.com",
+    "password": "<password>"
+}
+
+### Список всех пользователей
+GET /api/user/getall HTTP/1.1
+Authorization: Bearer <jwt_token>
+Host: localhost:7000
+
+### Получить одного пользователя
+GET /api/user/getone/1 HTTP/1.1
+Authorization: Bearer <jwt_token>
+Host: localhost:7000
+
+### Создать нового пользователя
+POST /api/user/create HTTP/1.1
+Host: localhost:7000
+Authorization: Bearer <jwt_token>
+Content-type: application/json; charset=utf-8
+
+{
+    "email": "admin@example.com",
+    "password": "<password>",
+    "role": "ADMIN"
+}
+
+### Обновить пользователя
+PUT /api/user/update/1 HTTP/1.1
+Host: localhost:7000
+Authorization: Bearer <jwt_token>
+Content-type: application/json; charset=utf-8
+
+{
+    "email": "updated@example.com",
+    "password": "<new_password>"
+}
+
+### Удалить пользователя
+DELETE /api/user/delete/2 HTTP/1.1
+Host: localhost:7000
+Authorization: Bearer <jwt_token>
