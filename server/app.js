@@ -42,6 +42,8 @@ app.use(fileUpload({
 }))
 // middleware для работы с cookie
 app.use(cookieParser(process.env.SECRET_KEY))
+// healthcheck endpoint
+app.get('/health', (req, res) => res.status(200).json({status: 'ok'}))
 // все маршруты приложения
 app.use('/api', router)
 

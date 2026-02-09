@@ -11,7 +11,8 @@
   "scripts": {
     "start": "node index.js",
     "start-dev": "nodemon index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "seed:users": "node scripts/seed-users.js"
   },
   "keywords": [
     "Backend",
