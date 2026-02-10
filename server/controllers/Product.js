@@ -1,4 +1,4 @@
-import ProductModel from '../models/Product.js'
+import ProductModel, { normalizeProductSort, sanitizeProductSearchQuery } from '../models/Product.js'
 import AppError from '../errors/AppError.js'
 
 const parsePage = (value) => {
@@ -12,14 +12,24 @@ const parseLimit = (value) => {
     return Math.min(parsed, 100)
 }
 
+const parseSearchQuery = (value) => {
+    return sanitizeProductSearchQuery(value)
+}
+
+const parseSort = (value) => {
+    return normalizeProductSort(value)
+}
+
 class Product {
     async getAll(req, res, next) {
         try {
             const {categoryId = null, brandId = null} = req.params
-            let {limit = null, page = null} = req.query
+            let {limit = null, page = null, q = '', sort = 'name_asc'} = req.query
             limit = parseLimit(limit)
             page = parsePage(page)
-            const options = {categoryId, brandId, limit, page}
+            q = parseSearchQuery(q)
+            sort = parseSort(sort)
+            const options = {categoryId, brandId, limit, page, q, sort}
             const products = await ProductModel.getAll(options)
             res.json(products)
         } catch(e) {

@@ -3,55 +3,60 @@ import ProductController from '../controllers/Product.js'
 import ProductPropController from '../controllers/ProductProp.js'
 import authMiddleware from '../middleware/authMiddleware.js'
 import adminMiddleware from '../middleware/adminMiddleware.js'
+import validateIntegerParam from '../middleware/validateIntegerParam.js'
 
 const router = new express.Router()
+router.param('id', validateIntegerParam())
+router.param('categoryId', validateIntegerParam())
+router.param('brandId', validateIntegerParam())
+router.param('productId', validateIntegerParam())
 
 /*
  * Товары
  */
 
 // список товаров выбранной категории и выбранного бренда
-router.get('/getall/categoryId/:categoryId([0-9]+)/brandId/:brandId([0-9]+)', ProductController.getAll)
+router.get('/getall/categoryId/:categoryId/brandId/:brandId', ProductController.getAll)
 // список товаров выбранной категории
-router.get('/getall/categoryId/:categoryId([0-9]+)', ProductController.getAll)
+router.get('/getall/categoryId/:categoryId', ProductController.getAll)
 // список товаров выбранного бренда
-router.get('/getall/brandId/:brandId([0-9]+)', ProductController.getAll)
+router.get('/getall/brandId/:brandId', ProductController.getAll)
 // список всех товаров каталога
 router.get('/getall', ProductController.getAll)
 // получить один товар каталога
-router.get('/getone/:id([0-9]+)', ProductController.getOne)
+router.get('/getone/:id', ProductController.getOne)
 // создать товар каталога — нужны права администратора
 router.post('/create', authMiddleware, adminMiddleware, ProductController.create)
 // обновить товар каталога  — нужны права администратора
-router.put('/update/:id([0-9]+)', authMiddleware, adminMiddleware, ProductController.update)
+router.put('/update/:id', authMiddleware, adminMiddleware, ProductController.update)
 // удалить товар каталога  — нужны права администратора
-router.delete('/delete/:id([0-9]+)', authMiddleware, adminMiddleware, ProductController.delete)
+router.delete('/delete/:id', authMiddleware, adminMiddleware, ProductController.delete)
 
 /*
  * Свойства
  */
 
 // список свойств товара
-router.get('/:productId([0-9]+)/property/getall', ProductPropController.getAll)
+router.get('/:productId/property/getall', ProductPropController.getAll)
 // одно свойство товара
-router.get('/:productId([0-9]+)/property/getone/:id([0-9]+)', ProductPropController.getOne)
+router.get('/:productId/property/getone/:id', ProductPropController.getOne)
 // создать свойство товара
 router.post(
-    '/:productId([0-9]+)/property/create',
+    '/:productId/property/create',
     authMiddleware,
     adminMiddleware,
     ProductPropController.create
 )
 // обновить свойство товара
 router.put(
-    '/:productId([0-9]+)/property/update/:id([0-9]+)',
+    '/:productId/property/update/:id',
     authMiddleware,
     adminMiddleware,
     ProductPropController.update
 )
 // удалить свойство товара
 router.delete(
-    '/:productId([0-9]+)/property/delete/:id([0-9]+)',
+    '/:productId/property/delete/:id',
     authMiddleware,
     adminMiddleware,
     ProductPropController.delete

@@ -9,14 +9,45 @@ import rateLimit from 'express-rate-limit'
 import router from './routes/index.js'
 import errorMiddleware from './middleware/errorMiddleware.js'
 
-const CORS_ORIGINS = (process.env.CORS_ORIGINS ?? 'http://localhost:3000')
+const normalizeOrigin = (origin) => origin.trim().replace(/\/+$/, '').toLowerCase()
+
+const CORS_ORIGINS = (process.env.CORS_ORIGINS ?? '')
     .split(',')
     .map(item => item.trim())
     .filter(Boolean)
+    .map(normalizeOrigin)
+const DEFAULT_CORS_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000']
+const allowedOrigins = new Set([
+    ...CORS_ORIGINS,
+    ...DEFAULT_CORS_ORIGINS.map(normalizeOrigin),
+])
 const UPLOAD_MAX_FILE_SIZE = Number.parseInt(process.env.UPLOAD_MAX_FILE_SIZE ?? '5242880', 10)
 const RATE_LIMIT_MAX = Number.parseInt(process.env.RATE_LIMIT_MAX ?? '300', 10)
 
 const app = express()
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Requests without Origin are allowed (curl, health checks, same-origin)
+        if (!origin) {
+            callback(null, true)
+            return
+        }
+        const normalizedOrigin = normalizeOrigin(origin)
+        const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(normalizedOrigin)
+        if (allowedOrigins.has(normalizedOrigin) || isLocalOrigin) {
+            callback(null, true)
+            return
+        }
+        callback(null, false)
+    },
+    credentials: true,
+    optionsSuccessStatus: 204,
+}
+
+// Cross-Origin Resource Sharing
+app.use(cors(corsOptions))
+app.options(/.*/, cors(corsOptions))
 
 app.use(helmet({crossOriginResourcePolicy: false}))
 app.use(rateLimit({
@@ -26,8 +57,6 @@ app.use(rateLimit({
     legacyHeaders: false,
 }))
 
-// Cross-Origin Resource Sharing
-app.use(cors({origin: CORS_ORIGINS, credentials: true}))
 // middleware для работы с json
 app.use(express.json({limit: '1mb'}))
 // middleware для статики (img, css)

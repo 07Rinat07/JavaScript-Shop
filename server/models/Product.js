@@ -2,6 +2,7 @@ import { Product as ProductMapping } from './mapping.js'
 import { ProductProp as ProductPropMapping } from './mapping.js'
 import { Brand as BrandMapping } from './mapping.js'
 import { Category as CategoryMapping } from './mapping.js'
+import { Op } from 'sequelize'
 import FileService from '../services/File.js'
 
 const parseProps = (value) => {
@@ -18,25 +19,77 @@ const parseProps = (value) => {
     return props
 }
 
+export const PRODUCT_ORDER_MAP = Object.freeze({
+    name_asc: [['name', 'ASC']],
+    price_asc: [['price', 'ASC'], ['name', 'ASC']],
+    price_desc: [['price', 'DESC'], ['name', 'ASC']],
+    rating_desc: [['rating', 'DESC'], ['name', 'ASC']],
+    newest: [['createdAt', 'DESC']],
+})
+
+const DEFAULT_PRODUCT_SORT = 'name_asc'
+
+const PRODUCT_SORT_ALIASES = Object.freeze({
+    name: 'name_asc',
+    price: 'price_asc',
+    '-price': 'price_desc',
+    rating: 'rating_desc',
+    created: 'newest',
+    '-created': 'newest',
+    createdat_desc: 'newest',
+})
+
+export const normalizeProductSort = (value) => {
+    if (typeof value !== 'string') return DEFAULT_PRODUCT_SORT
+    const normalized = value.trim().toLowerCase()
+    if (PRODUCT_ORDER_MAP[normalized]) return normalized
+    return PRODUCT_SORT_ALIASES[normalized] ?? DEFAULT_PRODUCT_SORT
+}
+
+export const sanitizeProductSearchQuery = (value, maxLength = 80) => {
+    if (typeof value !== 'string') return ''
+    return value.trim().slice(0, maxLength)
+}
+
+const buildProductSearchConditions = (query) => {
+    const search = `%${query}%`
+    return [
+        {name: {[Op.iLike]: search}},
+        {'$brand.name$': {[Op.iLike]: search}},
+        {'$category.name$': {[Op.iLike]: search}},
+    ]
+}
+
+export const buildProductListQuery = (options) => {
+    const {categoryId, brandId, limit, page, q = '', sort = DEFAULT_PRODUCT_SORT} = options
+    const where = {}
+
+    if (categoryId) where.categoryId = categoryId
+    if (brandId) where.brandId = brandId
+
+    const query = sanitizeProductSearchQuery(q)
+    if (query) {
+        where[Op.or] = buildProductSearchConditions(query)
+    }
+
+    return {
+        where,
+        limit,
+        offset: (page - 1) * limit,
+        distinct: true,
+        subQuery: false,
+        include: [
+            {model: BrandMapping, as: 'brand'},
+            {model: CategoryMapping, as: 'category'},
+        ],
+        order: PRODUCT_ORDER_MAP[normalizeProductSort(sort)],
+    }
+}
+
 class Product {
     async getAll(options) {
-        const {categoryId, brandId, limit, page} = options
-        const offset = (page - 1) * limit
-        const where = {}
-        if (categoryId) where.categoryId = categoryId
-        if (brandId) where.brandId = brandId
-        const products = await ProductMapping.findAndCountAll({
-            where,
-            limit,
-            offset,
-            include: [
-                {model: BrandMapping, as: 'brand'},
-                {model: CategoryMapping, as: 'category'}
-            ],
-            order: [
-                ['name', 'ASC'],
-            ],
-        })
+        const query = buildProductListQuery(options)
+        const products = await ProductMapping.findAndCountAll(query)
         return products
     }
 

@@ -7,6 +7,9 @@ import user from './user.js'
 import basket from './basket.js'
 import rating from './rating.js'
 import order from './order.js'
+import content from './content.js'
+import currency from './currency.js'
+import feedback from './feedback.js'
 
 const router = new express.Router()
 
@@ -17,5 +20,8 @@ router.use('/user', user)
 router.use('/basket', basket)
 router.use('/rating', rating)
 router.use('/order', order)
+router.use('/content', content)
+router.use('/currency', currency)
+router.use('/feedback', feedback)
 
 export default router

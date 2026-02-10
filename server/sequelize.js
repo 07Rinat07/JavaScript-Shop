@@ -13,6 +13,6 @@ export default new Sequelize(
             underscored: true
         },
         logging: false,
-        timezone: 'Europe/Moscow',
+        timezone: '+05:00',
     }
 )

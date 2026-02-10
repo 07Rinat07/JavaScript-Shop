@@ -2,8 +2,10 @@ import express from 'express'
 import OrderController from '../controllers/Order.js'
 import authMiddleware from '../middleware/authMiddleware.js'
 import adminMiddleware from '../middleware/adminMiddleware.js'
+import validateIntegerParam from '../middleware/validateIntegerParam.js'
 
 const router = new express.Router()
+router.param('id', validateIntegerParam())
 
 /*
  * только для администратора магазина
@@ -17,13 +19,13 @@ router.get(
 )
 // получить список заказов пользователя
 router.get(
-    '/admin/getall/user/:id([0-9]+)',
+    '/admin/getall/user/:id',
     authMiddleware, adminMiddleware,
     OrderController.adminGetUser
 )
 // получить заказ по id
 router.get(
-    '/admin/getone/:id([0-9]+)',
+    '/admin/getone/:id',
     authMiddleware, adminMiddleware,
     OrderController.adminGetOne
 )
@@ -35,7 +37,7 @@ router.post(
 )
 // удалить заказ по id
 router.delete(
-    '/admin/delete/:id([0-9]+)',
+    '/admin/delete/:id',
     authMiddleware, adminMiddleware,
     OrderController.adminDelete
 )
@@ -52,7 +54,7 @@ router.get(
 )
 // получить один заказ пользователя
 router.get(
-    '/user/getone/:id([0-9]+)',
+    '/user/getone/:id',
     authMiddleware,
     OrderController.userGetOne
 )

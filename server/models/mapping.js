@@ -104,6 +104,39 @@ const OrderItem = sequelize.define('order_item', {
     quantity: {type: DataTypes.INTEGER, allowNull: false},
 })
 
+// контентные блоки сайта (например, контакты), хранение в формате key/value
+const SiteContent = sequelize.define('site_content', {
+    id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+    key: {type: DataTypes.STRING, unique: true, allowNull: false},
+    value: {type: DataTypes.JSONB, allowNull: false, defaultValue: {}},
+})
+
+// обращения из формы обратной связи
+const Feedback = sequelize.define('feedback', {
+    id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+    name: {type: DataTypes.STRING, allowNull: false},
+    email: {type: DataTypes.STRING, allowNull: false},
+    phone: {type: DataTypes.STRING},
+    subject: {type: DataTypes.STRING},
+    message: {type: DataTypes.TEXT, allowNull: false},
+    status: {type: DataTypes.STRING, allowNull: false, defaultValue: 'new'},
+    isSpam: {type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false},
+    isBlocked: {type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false},
+    sourceIp: {type: DataTypes.STRING},
+    userAgent: {type: DataTypes.STRING},
+    readAt: {type: DataTypes.DATE},
+    spamAt: {type: DataTypes.DATE},
+    blockedAt: {type: DataTypes.DATE},
+})
+
+// блокировки отправителей фидбека (по email и/или ip)
+const FeedbackBlock = sequelize.define('feedback_block', {
+    id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+    email: {type: DataTypes.STRING, unique: true},
+    ip: {type: DataTypes.STRING, unique: true},
+    reason: {type: DataTypes.STRING, allowNull: false, defaultValue: 'spam'},
+})
+
 /*
  * Описание связей
  */
@@ -158,6 +191,10 @@ OrderItem.belongsTo(Order)
 User.hasMany(Order, {as: 'orders', onDelete: 'SET NULL'})
 Order.belongsTo(User)
 
+// связь обращений с пользователями: одно обращение может принадлежать пользователю
+User.hasMany(Feedback, {as: 'feedbacks', onDelete: 'SET NULL'})
+Feedback.belongsTo(User)
+
 export {
     User,
     Basket,
@@ -168,5 +205,8 @@ export {
     BasketProduct,
     ProductProp,
     Order,
-    OrderItem
+    OrderItem,
+    SiteContent,
+    Feedback,
+    FeedbackBlock,
 }

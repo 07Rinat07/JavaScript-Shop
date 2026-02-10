@@ -2,6 +2,7 @@ import 'dotenv/config'
 import bcrypt from 'bcrypt'
 import sequelize from '../sequelize.js'
 import { User } from '../models/mapping.js'
+import ensureUsersPrimaryKey from '../services/ensureUsersPrimaryKey.js'
 
 const SALT_ROUNDS = Number.parseInt(process.env.BCRYPT_SALT_ROUNDS ?? '10', 10)
 
@@ -33,6 +34,7 @@ const main = async () => {
     try {
         await sequelize.authenticate()
         if (process.env.DB_SYNC === 'true') {
+            await ensureUsersPrimaryKey(sequelize)
             await sequelize.sync()
         }
 

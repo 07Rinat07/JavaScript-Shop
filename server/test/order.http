@@ -22,8 +22,8 @@ Content-type: application/json; charset=utf-8
 {
     "name": "Сергей Иванов",
     "email": "ivanov@mail.ru",
-    "phone": "(999) 123-45-67",
-    "address": "Москва, улица Строителей, дом 123, кв.456",
+    "phone": "+7 (701) 123-45-67",
+    "address": "Уральск, улица Строителей, дом 123, кв.456",
     "comment": "Комментарий к заказу",
     "userId": 3,
     "items": [
@@ -55,8 +55,8 @@ Content-type: application/json; charset=utf-8
 {
     "name": "Сергей Иванов",
     "email": "ivanov@mail.ru",
-    "phone": "(999) 123-45-67",
-    "address": "Москва, улица Строителей, дом 123, кв.456",
+    "phone": "+7 (701) 123-45-67",
+    "address": "Уральск, улица Строителей, дом 123, кв.456",
     "comment": "Комментарий к заказу"
 }
 
@@ -69,7 +69,7 @@ Content-type: application/json; charset=utf-8
 {
     "name": "Сергей Иванов",
     "email": "ivanov@mail.ru",
-    "phone": "(999) 123-45-67",
-    "address": "Москва, улица Строителей, дом 123, кв.789",
+    "phone": "+7 (701) 123-45-67",
+    "address": "Уральск, улица Строителей, дом 123, кв.789",
     "comment": "Комментарий к заказу"
 }

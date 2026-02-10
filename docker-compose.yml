@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
     container_name: shop-db
     environment:
       POSTGRES_DB: online_store
@@ -43,7 +43,7 @@ services:
 
   client:
     build:
-      context: ./client.v2
+      context: ./client
       dockerfile: Dockerfile
       args:
         VITE_API_URL: http://localhost:7000/api/
