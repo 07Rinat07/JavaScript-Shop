@@ -9,6 +9,7 @@
     "npm": ">=9"
   },
   "scripts": {
+    "env:init": "node ../scripts/init-env.js .env.example .env",
     "start": "node index.js",
     "start-dev": "nodemon index.js",
     "test": "node --test",

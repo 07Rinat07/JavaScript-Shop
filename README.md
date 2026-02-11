@@ -25,6 +25,13 @@
 - PostgreSQL `15+` (рекомендуется 16)
 - Docker 24+ и Docker Compose v2 (опционально)
 
+## Кроссплатформенность
+
+Проект поддерживает Ubuntu, macOS и Windows (PowerShell):
+- все npm-скрипты запускаются одинаково на всех трёх ОС;
+- для инициализации `.env` используйте кроссплатформенный скрипт `node scripts/init-env.js`;
+- для Docker-инициализации БД дамп `database.sql` автоматически нормализуется к LF внутри `db`-образа (устраняет CRLF-проблемы на Windows).
+
 ## Локальный запуск
 
 1. Создайте базу:
@@ -37,7 +44,7 @@ CREATE DATABASE online_store;
 
 ```bash
 cd server
-cp .env.example .env
+npm run env:init
 npm install
 npm run start-dev
 ```
@@ -53,7 +60,7 @@ npm run start-dev
 
 ```bash
 cd ../client
-cp .env.example .env
+npm run env:init
 npm install
 npm start
 ```
@@ -79,12 +86,18 @@ npm run restore:catalog
 DB_HOST=localhost DB_PORT=5432 DB_USER=postgres DB_PASS=postgres DB_NAME=online_store npm --prefix server run restore:catalog
 ```
 
+PowerShell:
+
+```powershell
+$env:DB_HOST='localhost'; $env:DB_PORT='5432'; $env:DB_USER='postgres'; $env:DB_PASS='postgres'; $env:DB_NAME='online_store'; npm --prefix server run restore:catalog
+```
+
 ## Docker
 
 Запуск из корня:
 
 ```bash
-cp .env.example .env
+node scripts/init-env.js .env.example .env
 docker compose up -d --build
 ```
 
@@ -252,6 +265,13 @@ cd ../client && npm test && npm run build
 ```bash
 docker compose run --rm --no-deps -v "$PWD/server:/app" server sh -lc "npm ci && npm test"
 docker compose run --rm --no-deps -v "$PWD/client:/workspace/client" server sh -lc "cd /workspace/client && npm ci && npm test && npm run build"
+```
+
+PowerShell:
+
+```powershell
+docker compose run --rm --no-deps -v "${PWD}/server:/app" server sh -lc "npm ci && npm test"
+docker compose run --rm --no-deps -v "${PWD}/client:/workspace/client" server sh -lc "cd /workspace/client && npm ci && npm test && npm run build"
 ```
 
 ## Фикстуры пользователей
