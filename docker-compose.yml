@@ -1,6 +1,11 @@
 services:
   db:
-    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    build:
+      context: .
+      dockerfile: db/Dockerfile
+      args:
+        POSTGRES_IMAGE: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    image: javascript-shop-db
     container_name: shop-db
     environment:
       POSTGRES_DB: online_store
@@ -10,7 +15,6 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./database.sql:/docker-entrypoint-initdb.d/001-seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d online_store"]
       interval: 5s
