@@ -4,6 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sequelize from '../sequelize.js'
 import { Product, ProductProp } from '../models/mapping.js'
+import runMigrations from '../services/Migrations.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -124,6 +125,7 @@ const main = async () => {
         const productProps = parseCopyRows(productPropsCopy.columns, productPropsCopy.rows, 'product_props').map(mapProductProp)
 
         await sequelize.authenticate()
+        await runMigrations({sequelize})
 
         const transaction = await sequelize.transaction()
         try {

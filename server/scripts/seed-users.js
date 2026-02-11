@@ -2,14 +2,17 @@ import 'dotenv/config'
 import bcrypt from 'bcrypt'
 import sequelize from '../sequelize.js'
 import { User } from '../models/mapping.js'
-import ensureUsersPrimaryKey from '../services/ensureUsersPrimaryKey.js'
+import runMigrations from '../services/Migrations.js'
 
 const SALT_ROUNDS = Number.parseInt(process.env.BCRYPT_SALT_ROUNDS ?? '10', 10)
 
-const FIXTURE_ADMIN_EMAIL = process.env.FIXTURE_ADMIN_EMAIL ?? 'admin@local.test'
-const FIXTURE_ADMIN_PASSWORD = process.env.FIXTURE_ADMIN_PASSWORD ?? 'Admin12345'
-const FIXTURE_USER_EMAIL = process.env.FIXTURE_USER_EMAIL ?? 'user@local.test'
-const FIXTURE_USER_PASSWORD = process.env.FIXTURE_USER_PASSWORD ?? 'User12345'
+const getRequiredEnv = (name) => {
+    const value = process.env[name]
+    if (typeof value !== 'string' || value.trim() === '') {
+        throw new Error(`Не задана переменная окружения ${name}`)
+    }
+    return value.trim()
+}
 
 const upsertUser = async ({ email, password, role }) => {
     const hash = await bcrypt.hash(password, SALT_ROUNDS)
@@ -32,21 +35,23 @@ const upsertUser = async ({ email, password, role }) => {
 
 const main = async () => {
     try {
+        const fixtureAdminEmail = getRequiredEnv('FIXTURE_ADMIN_EMAIL')
+        const fixtureAdminPassword = getRequiredEnv('FIXTURE_ADMIN_PASSWORD')
+        const fixtureUserEmail = getRequiredEnv('FIXTURE_USER_EMAIL')
+        const fixtureUserPassword = getRequiredEnv('FIXTURE_USER_PASSWORD')
+
         await sequelize.authenticate()
-        if (process.env.DB_SYNC === 'true') {
-            await ensureUsersPrimaryKey(sequelize)
-            await sequelize.sync()
-        }
+        await runMigrations({sequelize})
 
         const admin = await upsertUser({
-            email: FIXTURE_ADMIN_EMAIL,
-            password: FIXTURE_ADMIN_PASSWORD,
+            email: fixtureAdminEmail,
+            password: fixtureAdminPassword,
             role: 'ADMIN'
         })
 
         const regular = await upsertUser({
-            email: FIXTURE_USER_EMAIL,
-            password: FIXTURE_USER_PASSWORD,
+            email: fixtureUserEmail,
+            password: fixtureUserPassword,
             role: 'USER'
         })
 

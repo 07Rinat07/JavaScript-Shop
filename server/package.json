@@ -10,6 +10,7 @@
   },
   "scripts": {
     "env:init": "node ../scripts/init-env.js .env.example .env",
+    "migrate": "node scripts/run-migrations.js",
     "start": "node index.js",
     "start-dev": "nodemon index.js",
     "test": "node --test",

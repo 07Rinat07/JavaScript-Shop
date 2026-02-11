@@ -137,6 +137,31 @@ const FeedbackBlock = sequelize.define('feedback_block', {
     reason: {type: DataTypes.STRING, allowNull: false, defaultValue: 'spam'},
 })
 
+// платеж по заказу
+const Payment = sequelize.define('payment', {
+    id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+    provider: {type: DataTypes.STRING, allowNull: false, defaultValue: 'mock'},
+    amount: {type: DataTypes.INTEGER, allowNull: false},
+    currency: {type: DataTypes.STRING, allowNull: false, defaultValue: 'KZT'},
+    status: {type: DataTypes.STRING, allowNull: false, defaultValue: 'CREATED'},
+    providerPaymentId: {type: DataTypes.STRING, unique: true},
+    idempotencyKey: {type: DataTypes.STRING, allowNull: false},
+    metadata: {type: DataTypes.JSONB, allowNull: false, defaultValue: {}},
+    paidAt: {type: DataTypes.DATE},
+    failedAt: {type: DataTypes.DATE},
+    canceledAt: {type: DataTypes.DATE},
+})
+
+// события вебхуков платежного провайдера
+const PaymentEvent = sequelize.define('payment_event', {
+    id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+    provider: {type: DataTypes.STRING, allowNull: false},
+    providerEventId: {type: DataTypes.STRING, allowNull: false},
+    eventType: {type: DataTypes.STRING, allowNull: false},
+    payload: {type: DataTypes.JSONB, allowNull: false, defaultValue: {}},
+    processedAt: {type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW},
+})
+
 /*
  * Описание связей
  */
@@ -195,6 +220,14 @@ Order.belongsTo(User)
 User.hasMany(Feedback, {as: 'feedbacks', onDelete: 'SET NULL'})
 Feedback.belongsTo(User)
 
+// связь заказа с платежом: один заказ -> один платеж
+Order.hasOne(Payment, {as: 'payment', foreignKey: 'orderId', onDelete: 'CASCADE'})
+Payment.belongsTo(Order, {foreignKey: 'orderId'})
+
+// связь платежа с входящими webhook-событиями
+Payment.hasMany(PaymentEvent, {as: 'events', foreignKey: 'paymentId', onDelete: 'SET NULL'})
+PaymentEvent.belongsTo(Payment, {foreignKey: 'paymentId'})
+
 export {
     User,
     Basket,
@@ -209,4 +242,6 @@ export {
     SiteContent,
     Feedback,
     FeedbackBlock,
+    Payment,
+    PaymentEvent,
 }

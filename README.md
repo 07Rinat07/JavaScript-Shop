@@ -2,6 +2,32 @@
 
 ![Витрина проекта JavaScript Shop](docs/project-preview.png)
 
+## Windows PowerShell quick start
+
+Для Windows используйте команды ниже в `PowerShell` (остальные команды в README в основном даны в `bash`).
+
+Локальный запуск:
+
+```powershell
+cd server
+npm run env:init
+npm install
+npm run migrate
+npm run start-dev
+
+cd ../client
+npm run env:init
+npm install
+npm start
+```
+
+Docker:
+
+```powershell
+node scripts/init-env.js .env.example .env
+docker compose up -d --build
+```
+
 ## Принимайте участие в разработке
 Приветствуются пулл-реквесты (PR) и сообщения об ошибках. Пожалуйста, добавляйте тесты для нового функционала.
 
@@ -30,7 +56,7 @@
 Проект поддерживает Ubuntu, macOS и Windows (PowerShell):
 - все npm-скрипты запускаются одинаково на всех трёх ОС;
 - для инициализации `.env` используйте кроссплатформенный скрипт `node scripts/init-env.js`;
-- для Docker-инициализации БД дамп `database.sql` автоматически нормализуется к LF внутри `db`-образа (устраняет CRLF-проблемы на Windows).
+- Docker-команды из раздела ниже одинаково работают на Ubuntu, macOS и Windows (PowerShell).
 
 ## Локальный запуск
 
@@ -46,13 +72,20 @@ CREATE DATABASE online_store;
 cd server
 npm run env:init
 npm install
+npm run migrate
 npm run start-dev
 ```
 
 Минимально проверьте в `server/.env`:
 - `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`, `DB_PORT`
-- `SECRET_KEY` (обязательно замените значение по умолчанию)
-- `DB_SYNC=true` только для первичной инициализации локальной БД
+- `SECRET_KEY` (минимум 32 символа, без значений по умолчанию)
+- `PAYMENT_WEBHOOK_SECRET` (минимум 24 символа)
+
+Пример генерации безопасных значений:
+
+```bash
+node -e "const c=require('crypto');console.log('SECRET_KEY='+c.randomBytes(32).toString('hex'));console.log('PAYMENT_WEBHOOK_SECRET='+c.randomBytes(24).toString('hex'))"
+```
 
 Сервер: `http://localhost:7000`.
 
@@ -67,30 +100,8 @@ npm start
 
 Клиент: `http://localhost:3000`.
 
-Если нужен заполненный каталог, импортируйте дамп:
-
-```bash
-psql -U postgres online_store < database.sql
-```
-
-Быстрое восстановление каталога (товары + характеристики) из `database.sql`:
-
-```bash
-cd server
-npm run restore:catalog
-```
-
-Для Docker с дефолтными параметрами (`shop-db`):
-
-```bash
-DB_HOST=localhost DB_PORT=5432 DB_USER=postgres DB_PASS=postgres DB_NAME=online_store npm --prefix server run restore:catalog
-```
-
-PowerShell:
-
-```powershell
-$env:DB_HOST='localhost'; $env:DB_PORT='5432'; $env:DB_USER='postgres'; $env:DB_PASS='postgres'; $env:DB_NAME='online_store'; npm --prefix server run restore:catalog
-```
+Важно: фикстуры пользователей, каталог и полный дамп `database.sql` не импортируются автоматически ни локально, ни в Docker.
+Все команды для ручной загрузки данных собраны в разделе `Ручная загрузка данных (фикстуры, каталог и полный дамп)`.
 
 ## Docker
 
@@ -103,7 +114,23 @@ docker compose up -d --build
 
 Docker автоматически использует:
 - `server/.env.docker` для backend
-- root `.env` для `POSTGRES_IMAGE` (версия Postgres)
+- root `.env` для:
+  - `POSTGRES_IMAGE` (версия Postgres)
+  - `SECRET_KEY`
+  - `PAYMENT_WEBHOOK_SECRET`
+
+Перед стартом обязательно задайте в root `.env`:
+- `SECRET_KEY` (минимум 32 символа)
+- `PAYMENT_WEBHOOK_SECRET` (минимум 24 символа)
+
+Генерация безопасных значений:
+
+```bash
+node -e "const c=require('crypto');console.log('SECRET_KEY='+c.randomBytes(32).toString('hex'));console.log('PAYMENT_WEBHOOK_SECRET='+c.randomBytes(24).toString('hex'))"
+```
+
+Фикстуры пользователей, каталог и полный дамп `database.sql` не импортируются автоматически.
+Используйте команды из раздела `Ручная загрузка данных (фикстуры, каталог и полный дамп)`.
 
 Сервисы:
 - клиент: `http://localhost:3000`
@@ -151,6 +178,12 @@ POSTGRES_IMAGE=postgres:15-alpine
 POSTGRES_IMAGE=postgres:15-alpine docker compose up -d --build
 ```
 
+PowerShell:
+
+```powershell
+$env:POSTGRES_IMAGE='postgres:15-alpine'; docker compose up -d --build
+```
+
 Если меняете major-версию PostgreSQL на уже существующем volume, обычно нужен перезапуск с очисткой данных:
 
 ```bash
@@ -159,6 +192,14 @@ docker compose up -d --build
 ```
 
 ## Переменные окружения
+
+### `.env` (root, для Docker Compose)
+
+```env
+POSTGRES_IMAGE=postgres:16-alpine
+SECRET_KEY=
+PAYMENT_WEBHOOK_SECRET=
+```
 
 ### `server/.env`
 
@@ -171,12 +212,12 @@ DB_USER=postgres
 DB_PASS=change_me
 DB_PORT=5432
 
-SECRET_KEY=change_me
+SECRET_KEY=__SET_STRONG_SECRET_KEY__
 BCRYPT_SALT_ROUNDS=10
+PAYMENT_WEBHOOK_SECRET=__SET_PAYMENT_WEBHOOK_SECRET__
 CORS_ORIGINS=http://localhost:3000
 RATE_LIMIT_MAX=300
 UPLOAD_MAX_FILE_SIZE=5242880
-DB_SYNC=true
 ```
 
 ### `client/.env`
@@ -189,10 +230,11 @@ VITE_IMG_URL=http://localhost:7000/
 ## Скрипты
 
 ### `server`
+- `npm run migrate` - запуск SQL-миграций
 - `npm run start-dev` - dev-запуск
 - `npm start` - production-запуск
 - `npm test` - API smoke-тесты
-- `npm run seed:users` - фикстуры пользователей
+- `npm run seed:users` - upsert фикстурных пользователей (только при явно заданных env)
 - `npm run restore:catalog` - восстановление товаров и свойств из `database.sql`
 
 ### `client`
@@ -251,6 +293,16 @@ VITE_IMG_URL=http://localhost:7000/
 - `PATCH /api/feedback/admin/block/:id` — только администратор, пометить как спам и заблокировать отправителя
 - `DELETE /api/feedback/admin/delete/:id` — только администратор, удалить обращение
 
+## API платежей
+
+- `POST /api/payment/order/:orderId/initiate` — инициация платежа (авторизованный владелец заказа или администратор)
+  - обязательный header: `Idempotency-Key`
+  - body: `provider` (`mock`), `currency`, `returnUrl`, `metadata`
+- `GET /api/payment/order/:orderId` — получить платеж заказа (авторизованный владелец заказа или администратор)
+- `POST /api/payment/webhook/:provider` — webhook провайдера (raw JSON)
+  - обязательный header: `x-webhook-signature` (HMAC SHA-256 от raw body)
+  - секрет подписи: `PAYMENT_WEBHOOK_SECRET`
+
 ## Тесты и проверка
 
 Локально:
@@ -263,26 +315,92 @@ cd ../client && npm test && npm run build
 В Docker:
 
 ```bash
-docker compose run --rm --no-deps -v "$PWD/server:/app" server sh -lc "npm ci && npm test"
-docker compose run --rm --no-deps -v "$PWD/client:/workspace/client" server sh -lc "cd /workspace/client && npm ci && npm test && npm run build"
+docker compose run --rm --no-deps -e NODE_ENV=test -v "$PWD/server:/app" -v /app/node_modules server sh -lc "npm ci --include=dev && npm test"
+docker compose run --rm --no-deps -e NODE_ENV=development -v "$PWD/client:/workspace/client" -v /workspace/client/node_modules server sh -lc "cd /workspace/client && npm ci --include=dev && npm test && npm run build"
 ```
 
 PowerShell:
 
 ```powershell
-docker compose run --rm --no-deps -v "${PWD}/server:/app" server sh -lc "npm ci && npm test"
-docker compose run --rm --no-deps -v "${PWD}/client:/workspace/client" server sh -lc "cd /workspace/client && npm ci && npm test && npm run build"
+docker compose run --rm --no-deps -e NODE_ENV=test -v "${PWD}/server:/app" -v /app/node_modules server sh -lc "npm ci --include=dev && npm test"
+docker compose run --rm --no-deps -e NODE_ENV=development -v "${PWD}/client:/workspace/client" -v /workspace/client/node_modules server sh -lc "cd /workspace/client && npm ci --include=dev && npm test && npm run build"
 ```
 
-## Фикстуры пользователей
+Примечание:
+- предупреждение `No services to build` от Docker Compose для `run` допустимо и не является ошибкой;
+- отдельный том `-v /.../node_modules` обязателен, чтобы изолировать Linux-зависимости контейнера от хостового `node_modules` (особенно важно на Windows).
+- на первом запуске после строки `Container ... Creating/Created` возможна пауза на `npm ci` (это нормально, контейнер не завис).
 
-По умолчанию:
-- admin: `admin@local.test` / `Admin12345`
-- user: `user@local.test` / `User12345`
+## Ручная загрузка данных (фикстуры, каталог и полный дамп)
+
+По умолчанию данные не загружаются автоматически:
+- фикстуры пользователей;
+- каталог (товары + характеристики);
+- полный дамп `database.sql`.
+
+### 1) Фикстуры пользователей
 
 Локально:
 
 ```bash
 cd server
+FIXTURE_ADMIN_EMAIL=admin@local.test \
+FIXTURE_ADMIN_PASSWORD='set_strong_password' \
+FIXTURE_USER_EMAIL=user@local.test \
+FIXTURE_USER_PASSWORD='set_strong_password' \
 npm run seed:users
+```
+
+PowerShell:
+
+```powershell
+cd server
+$env:FIXTURE_ADMIN_EMAIL='admin@local.test'
+$env:FIXTURE_ADMIN_PASSWORD='set_strong_password'
+$env:FIXTURE_USER_EMAIL='user@local.test'
+$env:FIXTURE_USER_PASSWORD='set_strong_password'
+npm run seed:users
+```
+
+Docker:
+
+```bash
+docker compose exec server sh -lc "FIXTURE_ADMIN_EMAIL=admin@local.test FIXTURE_ADMIN_PASSWORD='set_strong_password' FIXTURE_USER_EMAIL=user@local.test FIXTURE_USER_PASSWORD='set_strong_password' npm run seed:users"
+```
+
+### 2) Восстановление каталога из `database.sql` (только товары + характеристики)
+
+Локально:
+
+```bash
+cd server
+npm run restore:catalog
+```
+
+Docker:
+
+```bash
+docker compose exec server npm run restore:catalog
+```
+
+### 3) Полный импорт `database.sql` (вся БД)
+
+Импортируйте только в чистую БД. После импорта обязательно запустите миграции, чтобы добавить недостающие таблицы/индексы (включая payment-домен).
+
+Локально:
+
+```bash
+psql -v ON_ERROR_STOP=1 -U postgres -d online_store -f database.sql
+cd server
+npm run migrate
+```
+
+Docker:
+
+```bash
+docker compose down -v
+docker compose up -d --wait db
+docker compose cp database.sql db:/tmp/database.sql
+docker compose exec db sh -lc "psql -v ON_ERROR_STOP=1 -U postgres -d online_store -f /tmp/database.sql"
+docker compose up -d --wait server client
 ```

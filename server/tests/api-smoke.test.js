@@ -81,6 +81,19 @@ test('GET /api/order/user/getall returns 401 without auth', async () => {
     assert.equal(res.status, 401)
 })
 
+test('POST /api/payment/order/1/initiate returns 401 without auth', async () => {
+    const res = await request(app)
+        .post('/api/payment/order/1/initiate')
+        .set('Idempotency-Key', 'test-key')
+        .send({provider: 'mock'})
+    assert.equal(res.status, 401)
+})
+
+test('GET /api/payment/order/1 returns 401 without auth', async () => {
+    const res = await request(app).get('/api/payment/order/1')
+    assert.equal(res.status, 401)
+})
+
 test('GET /api/product/getone/abc returns 400 for invalid integer param', async () => {
     const res = await request(app).get('/api/product/getone/abc')
     assert.equal(res.status, 400)

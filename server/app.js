@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import router from './routes/index.js'
+import { webhookRouter as paymentWebhookRouter } from './routes/payment.js'
 import errorMiddleware from './middleware/errorMiddleware.js'
 
 const normalizeOrigin = (origin) => origin.trim().replace(/\/+$/, '').toLowerCase()
@@ -56,6 +57,9 @@ app.use(rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 }))
+
+// webhook маршруты платежей должны обрабатываться как raw body до express.json
+app.use('/api/payment/webhook', paymentWebhookRouter)
 
 // middleware для работы с json
 app.use(express.json({limit: '1mb'}))

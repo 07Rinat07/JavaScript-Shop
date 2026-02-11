@@ -29,11 +29,13 @@ services:
     container_name: shop-server
     env_file:
       - ./server/.env.docker
+    environment:
+      NODE_ENV: production
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in root .env (min 32 chars)}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?Set PAYMENT_WEBHOOK_SECRET in root .env (min 24 chars)}
     depends_on:
       db:
         condition: service_healthy
-    command: >
-      sh -c "npm run seed:users && npm start"
     ports:
       - "7000:7000"
     volumes:

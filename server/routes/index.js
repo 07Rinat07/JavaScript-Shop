@@ -10,6 +10,7 @@ import order from './order.js'
 import content from './content.js'
 import currency from './currency.js'
 import feedback from './feedback.js'
+import payment from './payment.js'
 
 const router = new express.Router()
 
@@ -23,5 +24,6 @@ router.use('/order', order)
 router.use('/content', content)
 router.use('/currency', currency)
 router.use('/feedback', feedback)
+router.use('/payment', payment)
 
 export default router
